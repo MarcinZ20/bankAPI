@@ -2,14 +2,14 @@ package parser
 
 // BankData represents a bank data to be processed by the parser
 type BankData struct {
-	CountryISO2Code string
-	SwiftCode       string
-	CodeType        string
-	Name            string
-	Address         string
-	TownName        string
-	CountryName     string
-	Timezone        string
+	CountryISO2Code string `bson:"country_iso2_code"`
+	SwiftCode       string `bson:"swift_code"`
+	CodeType        string `bson:"code_type"`
+	Name            string `bson:"name"`
+	Address         string `bson:"address"`
+	TownName        string `bson:"town_name"`
+	CountryName     string `bson:"country_name"`
+	Timezone        string `bson:"timezone"`
 }
 
 // GoogleSpreadsheet represents a spreadsheet data according to Google Sheets API:

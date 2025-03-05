@@ -3,7 +3,7 @@ package transformer
 import (
 	"strings"
 
-	"github.com/MarcinZ20/bankAPI/internal/parser"
+	"github.com/MarcinZ20/bankAPI/handlers/parser"
 )
 
 func TransformBankEntity(bank parser.Bank) parser.Bank {

@@ -1,18 +1,17 @@
 package parser
 
-// BankData represents a bank data to be processed by the parser
-type BankData struct {
-	CountryISO2Code string
-	SwiftCode       string
-	CodeType        string
-	Name            string
-	Address         string
-	TownName        string
-	CountryName     string
-	Timezone        string
+type Bank struct {
+	CountryISO2Code string `json:"countryISO2Code"`
+	SwiftCode       string `json:"swiftCode"`
+	CodeType        string `json:"codeType"`
+	Name            string `json:"name"`
+	Address         string `json:"address"`
+	TownName        string `json:"townName"`
+	CountryName     string `json:"countryName"`
+	Timezone        string `json:"timezone"`
 }
 
-// GoogleSpreadsheet represents a spreadsheet data according to Google Sheets API:
+// GoogleSpreadsheet represents a spreadsheet data structure according to Google Sheets API:
 //
 //	https://developers.google.com/sheets/api/reference/rest/v4/spreadsheets#SpreadsheetProperties
 type GoogleSpreadsheet struct {

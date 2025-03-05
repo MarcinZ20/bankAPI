@@ -10,7 +10,7 @@ var SpreedsheetData GoogleSpreadsheet = GoogleSpreadsheet{
 	SpreadsheetId: "1iFFqsu_xruvVKzXAadAAlDBpIuU51v-pfIEU5HeGa8w",
 }
 
-func ParseBankData(spreadsheet GoogleSpreadsheet) ([]BankData, error) {
+func ParseBankData(spreadsheet GoogleSpreadsheet) ([]Bank, error) {
 	url := fmt.Sprintf("https://docs.google.com/spreadsheets/d/%s/export?format=csv", SpreedsheetData.SpreadsheetId)
 
 	resp, err := http.Get(url)
@@ -27,13 +27,13 @@ func ParseBankData(spreadsheet GoogleSpreadsheet) ([]BankData, error) {
 		return nil, fmt.Errorf("failed to parse csv data: %v", err)
 	}
 
-	var bankData []BankData
+	var bankData []Bank
 
 	for i, row := range rows {
-		if i == 0 {
+		if i == 0 { // Skip header row
 			continue
 		}
-		bank := BankData{
+		bank := Bank{
 			CountryISO2Code: row[0],
 			SwiftCode:       row[1],
 			CodeType:        row[2],

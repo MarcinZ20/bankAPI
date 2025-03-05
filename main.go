@@ -6,6 +6,7 @@ import (
 
 	"github.com/MarcinZ20/bankAPI/db"
 	"github.com/MarcinZ20/bankAPI/internal/parser"
+	"github.com/MarcinZ20/bankAPI/utils"
 )
 
 func main() {
@@ -24,6 +25,11 @@ func main() {
 	}
 
 	for _, bank := range bankData {
-		fmt.Println(bank)
+		validationResult := utils.ValidateBankEntity(bank)
+		if !validationResult.IsValid {
+			fmt.Println(validationResult.Errors)
+		}
 	}
+
+	fmt.Println("Validation completed")
 }

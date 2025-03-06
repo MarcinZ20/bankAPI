@@ -36,12 +36,9 @@ func ParseBankData(spreadsheet GoogleSpreadsheet) ([]Bank, error) {
 		bank := Bank{
 			CountryISO2Code: row[0],
 			SwiftCode:       row[1],
-			CodeType:        row[2],
 			Name:            row[3],
 			Address:         row[4],
-			TownName:        row[5],
 			CountryName:     row[6],
-			Timezone:        row[7],
 		}
 		bankData = append(bankData, bank)
 	}

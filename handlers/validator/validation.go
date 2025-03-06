@@ -1,10 +1,10 @@
-package utils
+package validator
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/MarcinZ20/bankAPI/internal/parser"
+	"github.com/MarcinZ20/bankAPI/handlers/parser"
 	"github.com/MarcinZ20/bankAPI/utils"
 )
 
@@ -16,8 +16,6 @@ type ValidationResult struct {
 type Validator interface {
 	Validate(value string) []error
 }
-
-// Validators
 
 type SwiftCodeValidator struct{}
 

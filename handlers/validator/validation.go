@@ -17,8 +17,6 @@ type Validator interface {
 	Validate(value string) []error
 }
 
-// Validators
-
 type SwiftCodeValidator struct{}
 
 func (v SwiftCodeValidator) Validate(value string) []error {

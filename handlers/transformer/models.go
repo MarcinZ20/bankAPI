@@ -45,6 +45,7 @@ func (b *Branch) GetSwiftCode() string {
 	return b.SwiftCode
 }
 
+// TODO: Check if getters are really necessary
 // BankData represents a bank data structure to be processed by the parser
 type Headquarter struct {
 	Address         string   `bson:"address" json:"address"`

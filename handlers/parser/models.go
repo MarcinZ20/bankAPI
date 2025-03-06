@@ -1,5 +1,9 @@
 package parser
 
+import (
+	"strings"
+)
+
 type Bank struct {
 	CountryISO2Code string `json:"countryISO2Code"`
 	SwiftCode       string `json:"swiftCode"`
@@ -9,6 +13,10 @@ type Bank struct {
 	TownName        string `json:"townName"`
 	CountryName     string `json:"countryName"`
 	Timezone        string `json:"timezone"`
+}
+
+func (b *Bank) IsHeadquarter() bool {
+	return strings.HasSuffix(b.SwiftCode, "XXX")
 }
 
 // GoogleSpreadsheet represents a spreadsheet data structure according to Google Sheets API:

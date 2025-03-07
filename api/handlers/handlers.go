@@ -101,8 +101,60 @@ func GetSwiftCodesBySwiftCode(c *fiber.Ctx) error {
 	return c.Status(http.StatusOK).JSON(branch)
 }
 
-func GetSwiftCodesByCountryCode(ctx *fiber.Ctx) error {
-	return nil
+func GetSwiftCodesByCountryCode(c *fiber.Ctx) error {
+	ctx, close := context.WithTimeout(context.Background(), 5*time.Second)
+	defer close()
+
+	collection, err := db.GetCollection(config.MongoClient)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": "Database error",
+		})
+	}
+
+	countryCode := c.Params("countryISO2")
+
+	if !utils.IsValidCountryCode(countryCode) {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": fmt.Sprintf("Invalid country code format: %v", countryCode),
+		})
+	}
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.D{
+			{Key: "countryISO2", Value: countryCode},
+			{Key: "isHeadquarter", Value: true},
+		}}},
+		{{Key: "$project", Value: bson.D{
+			{Key: "_id", Value: 0},
+		}}},
+	}
+
+	cursor, err := collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Database error: %v", err),
+		})
+	}
+	defer cursor.Close(ctx)
+
+	var results []models.Headquarter
+	if err := cursor.All(ctx, &results); err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fmt.Sprintf("Error decoding results: %v", err),
+		})
+	}
+
+	if len(results) == 0 {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": fmt.Sprintf("No banks found for country code: %v", countryCode),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"count": len(results),
+		"banks": results,
+	})
 }
 
 func AddNewSwiftCode(ctx *fiber.Ctx) error {

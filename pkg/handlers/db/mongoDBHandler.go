@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/MarcinZ20/bankAPI/pkg/models"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -23,4 +24,17 @@ func SaveEntities(collection *mongo.Collection, data map[string]models.Headquart
 			fmt.Printf("Inserted %d records into the database\n", len(docs))
 		}
 	}
+}
+
+func GetCollection(client *mongo.Client) (*mongo.Collection, error) {
+	if client == nil {
+		return nil, fmt.Errorf("client is not working")
+	}
+
+	col := client.Database(os.Getenv("MONGO_DATABASE")).Collection(os.Getenv("MONGO_COLLECTION"))
+	if col == nil {
+		return nil, fmt.Errorf("collection doesn't exist")
+	}
+
+	return col, nil
 }

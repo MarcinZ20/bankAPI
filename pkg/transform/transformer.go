@@ -40,7 +40,7 @@ func TransformIntoBranch(bank models.Bank) models.Branch {
 	}
 }
 
-func Transform(banks []models.Bank) map[string]models.Headquarter {
+func Transform(banks *[]models.Bank) map[string]models.Headquarter {
 	hqs := make(map[string]models.Headquarter)
 	brs := make(map[string][]models.Branch)
 
@@ -50,8 +50,8 @@ func Transform(banks []models.Bank) map[string]models.Headquarter {
 	return hqs
 }
 
-func ConvertIntoMaps(banks []models.Bank, hqs map[string]models.Headquarter, brs map[string][]models.Branch) {
-	for _, bank := range banks {
+func ConvertIntoMaps(banks *[]models.Bank, hqs map[string]models.Headquarter, brs map[string][]models.Branch) {
+	for _, bank := range *banks {
 		key_code := bank.SwiftCode[0:8]
 
 		if bank.IsHeadquarter() {

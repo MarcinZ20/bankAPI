@@ -41,10 +41,6 @@ func main() {
 	config.ConfigAPI()
 	routes.BankRoutes(config.ApiServer)
 
-	if err := config.ApiServer.Listen(os.Getenv("API_SERVER_PORT")); err != nil {
-		fmt.Printf("Server error: %v\n", err)
-	}
-
 	// mySpreadsheet := models.GoogleSpreadsheet{
 	// 	SpreadsheetId: os.Getenv("SPREADSHEET_ID"),
 	// }
@@ -70,4 +66,8 @@ func main() {
 	// transformedData := transform.Transform(&rawData)
 
 	// db.SaveEntities(collection, transformedData)
+
+	if err := config.ApiServer.Listen(os.Getenv("API_SERVER_PORT")); err != nil {
+		fmt.Printf("Server error: %v\n", err)
+	}
 }

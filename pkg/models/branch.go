@@ -8,7 +8,7 @@ type Branch struct {
 	CountryISO2Code string `bson:"countryISO2" json:"countryISO2"`
 	CountryName     string `bson:"countryName" json:"countryName"`
 	IsHeadquarter   bool   `bson:"isHeadquarter" json:"isHeadquarter"`
-	SwiftCode       string `bson:"swift_code" json:"swift_code"`
+	SwiftCode       string `bson:"swiftCode" json:"swiftCode"`
 }
 
 func (b *Branch) GetAddress() string {

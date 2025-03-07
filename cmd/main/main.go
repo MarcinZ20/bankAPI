@@ -5,14 +5,12 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/MarcinZ20/bankAPI/api/routes"
 	"github.com/MarcinZ20/bankAPI/config"
 	"github.com/MarcinZ20/bankAPI/pkg/handlers/db"
-	"github.com/MarcinZ20/bankAPI/pkg/handlers/spreadsheet"
-	"github.com/MarcinZ20/bankAPI/pkg/models"
-	"github.com/MarcinZ20/bankAPI/pkg/parser"
-	"github.com/MarcinZ20/bankAPI/pkg/transform"
-	"github.com/MarcinZ20/bankAPI/pkg/validation"
 	"github.com/joho/godotenv"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
@@ -20,41 +18,56 @@ func main() {
 		fmt.Print(fmt.Errorf("error while loading .env: %v", err))
 	}
 
-	client, err := config.ConnectDb()
+	config.ConnectDb()
+	defer config.MongoClient.Disconnect(context.Background())
+
+	collection, err := db.GetCollection(config.MongoClient)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	defer client.Disconnect(context.Background())
 
-	collection, err := db.GetCollection(client)
+	indexModel := mongo.IndexModel{
+		Keys: bson.D{{
+			Key: "swiftCode", Value: 1,
+		}},
+	}
+
+	name, err := collection.Indexes().CreateOne(context.TODO(), indexModel)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("Couldnt create collection %v: %v", name, err)
 	}
 
-	mySpreadsheet := models.GoogleSpreadsheet{
-		SpreadsheetId: os.Getenv("SPREADSHEET_ID"),
+	config.ConfigAPI()
+	routes.BankRoutes(config.ApiServer)
+
+	if err := config.ApiServer.Listen(os.Getenv("API_SERVER_PORT")); err != nil {
+		fmt.Printf("Server error: %v\n", err)
 	}
 
-	response, err := spreadsheet.FetchSpreadsheetData(&mySpreadsheet)
-	if err != nil {
-		fmt.Println("Error")
-	}
+	// mySpreadsheet := models.GoogleSpreadsheet{
+	// 	SpreadsheetId: os.Getenv("SPREADSHEET_ID"),
+	// }
 
-	var rawData []models.Bank
-	err = parser.ParseBankData(response, &rawData)
-	if err != nil {
-		fmt.Println("Error")
-	}
+	// response, err := spreadsheet.FetchSpreadsheetData(&mySpreadsheet)
+	// if err != nil {
+	// 	fmt.Println("Error")
+	// }
 
-	for _, bank := range rawData {
-		validationResult := validation.ValidateBankEntity(bank)
-		if !validationResult.IsValid {
-			fmt.Println(validationResult.Errors)
-		}
-	}
+	// var rawData []models.Bank
+	// err = parser.ParseBankData(response, &rawData)
+	// if err != nil {
+	// 	fmt.Println("Error")
+	// }
 
-	transformedData := transform.Transform(&rawData)
+	// for _, bank := range rawData {
+	// 	validationResult := validation.ValidateBankEntity(bank)
+	// 	if !validationResult.IsValid {
+	// 		fmt.Println(validationResult.Errors)
+	// 	}
+	// }
 
-	db.SaveEntities(collection, transformedData)
+	// transformedData := transform.Transform(&rawData)
+
+	// db.SaveEntities(collection, transformedData)
 }

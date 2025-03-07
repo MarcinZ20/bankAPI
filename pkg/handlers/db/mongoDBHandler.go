@@ -32,9 +32,6 @@ func GetCollection(client *mongo.Client) (*mongo.Collection, error) {
 	}
 
 	col := client.Database(os.Getenv("MONGO_DATABASE")).Collection(os.Getenv("MONGO_COLLECTION"))
-	if col == nil {
-		return nil, fmt.Errorf("collection doesn't exist")
-	}
 
 	return col, nil
 }

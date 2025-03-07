@@ -1,11 +1,11 @@
-package validator
+package validation
 
 import (
 	"fmt"
 	"strings"
 
-	"github.com/MarcinZ20/bankAPI/handlers/parser"
-	"github.com/MarcinZ20/bankAPI/utils"
+	"github.com/MarcinZ20/bankAPI/internal/utils"
+	"github.com/MarcinZ20/bankAPI/pkg/models"
 )
 
 type ValidationResult struct {
@@ -57,7 +57,7 @@ func ValidateBankEntity(entity any) ValidationResult {
 	}
 
 	switch e := entity.(type) {
-	case parser.Bank:
+	case models.Bank:
 		validateField("SwiftCode", e.SwiftCode, []Validator{SwiftCodeValidator{}}).appendErrors(&result)
 		validateField("CountryISO2Code", e.CountryISO2Code, []Validator{CountryISO2Validator{}}).appendErrors(&result)
 	default:
@@ -84,7 +84,6 @@ func validateField(fieldName string, value string, validators []Validator) *Vali
 	return result
 }
 
-// appendErrors aggregates errors
 func (v *ValidationResult) appendErrors(result *ValidationResult) {
 	if !v.IsValid {
 		result.IsValid = false

@@ -11,10 +11,6 @@ type Branch struct {
 	SwiftCode       string `bson:"swiftCode" json:"swiftCode"`
 }
 
-func (b *Branch) GetAddress() string {
-	return b.Address
-}
-
 func (b *Branch) GetName() string {
 	return b.Name
 }

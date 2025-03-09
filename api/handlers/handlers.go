@@ -18,7 +18,7 @@ import (
 )
 
 func GetSwiftCodesBySwiftCode(c *fiber.Ctx) error {
-	ctx, close := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, close := context.WithTimeout(c.Context(), 5*time.Second)
 	defer close()
 
 	collection, err := db.GetCollection(config.MongoClient)
@@ -103,7 +103,7 @@ func GetSwiftCodesBySwiftCode(c *fiber.Ctx) error {
 }
 
 func GetSwiftCodesByCountryCode(c *fiber.Ctx) error {
-	ctx, close := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, close := context.WithTimeout(c.Context(), 5*time.Second)
 	defer close()
 
 	collection, err := db.GetCollection(config.MongoClient)
@@ -159,7 +159,7 @@ func GetSwiftCodesByCountryCode(c *fiber.Ctx) error {
 }
 
 func AddNewSwiftCode(c *fiber.Ctx) error {
-	ctx, close := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, close := context.WithTimeout(c.Context(), 5*time.Second)
 	defer close()
 
 	collection, err := db.GetCollection(config.MongoClient)
@@ -286,7 +286,7 @@ func AddNewSwiftCode(c *fiber.Ctx) error {
 }
 
 func DeleteSwiftCode(c *fiber.Ctx) error {
-	ctx, close := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, close := context.WithTimeout(c.Context(), 5*time.Second)
 	defer close()
 
 	collection, err := db.GetCollection(config.MongoClient)

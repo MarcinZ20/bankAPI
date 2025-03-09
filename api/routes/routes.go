@@ -6,8 +6,8 @@ import (
 )
 
 func BankRoutes(app *fiber.App) {
-	app.Get("/v1/swift-codes/:swiftCode", handlers.GetSwiftCodesBySwiftCode)
 	app.Get("/v1/swift-codes/country/:countryISO2", handlers.GetSwiftCodesByCountryCode)
+	app.Get("/v1/swift-codes/:swiftCode", handlers.GetSwiftCodesBySwiftCode)
 	app.Post("/v1/swift-codes", handlers.AddNewSwiftCode)
 	app.Delete("/v1/swift-codes/:swiftCode", handlers.DeleteSwiftCode)
 }

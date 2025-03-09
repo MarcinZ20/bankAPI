@@ -8,7 +8,7 @@ import (
 
 // IsBranchOf checks if a bank is a branch of a headquarters
 func IsBranchOf(bank models.Bank, hq models.Headquarter) bool {
-	return bank.SwiftCode[:8] == hq.SwiftCode[:8] && bank.CountryISO2Code == hq.CountryISO2Code
+	return bank.SwiftCode[:8] == hq.SwiftCode[:8] && bank.CountryISO2Code == hq.CountryISO2
 }
 
 func TransformBankEntity(bank *models.Bank) {
@@ -18,25 +18,32 @@ func TransformBankEntity(bank *models.Bank) {
 	bank.CountryName = strings.ToUpper(bank.CountryName)
 }
 
+func TransformRequestModel(branch *models.Branch) {
+	branch.SwiftCode = strings.ToUpper(branch.SwiftCode)
+	branch.CountryISO2 = strings.ToUpper(branch.CountryISO2)
+	branch.BankName = strings.ToUpper(branch.BankName)
+	branch.CountryName = strings.ToUpper(branch.CountryName)
+}
+
 func TransformIntoHeadquarter(bank models.Bank) models.Headquarter {
 	return models.Headquarter{
-		Address:         bank.Address,
-		BankName:        bank.Name,
-		CountryISO2Code: bank.CountryISO2Code,
-		CountryName:     bank.CountryName,
-		IsHeadquarter:   bank.IsHeadquarter(),
-		SwiftCode:       bank.SwiftCode,
+		Address:       bank.Address,
+		BankName:      bank.Name,
+		CountryISO2:   bank.CountryISO2Code,
+		CountryName:   bank.CountryName,
+		IsHeadquarter: bank.IsHeadquarter(),
+		SwiftCode:     bank.SwiftCode,
 	}
 }
 
 func TransformIntoBranch(bank models.Bank) models.Branch {
 	return models.Branch{
-		Address:         bank.Address,
-		Name:            bank.Name,
-		CountryISO2Code: bank.CountryISO2Code,
-		CountryName:     bank.CountryName,
-		IsHeadquarter:   bank.IsHeadquarter(),
-		SwiftCode:       bank.SwiftCode,
+		Address:       bank.Address,
+		BankName:      bank.Name,
+		CountryISO2:   bank.CountryISO2Code,
+		CountryName:   bank.CountryName,
+		IsHeadquarter: bank.IsHeadquarter(),
+		SwiftCode:     bank.SwiftCode,
 	}
 }
 

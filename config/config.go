@@ -6,6 +6,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/MarcinZ20/bankAPI/api/middleware"
 	"github.com/goccy/go-json"
 	"github.com/gofiber/fiber/v2"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -44,7 +45,10 @@ func ConfigAPI() {
 		StrictRouting: true,
 		JSONEncoder:   json.Marshal,
 		JSONDecoder:   json.Unmarshal,
+		BodyLimit:     10 * 1024 * 1024, // 10MB
+		ReadTimeout:   5 * time.Second,
 	}
 
 	ApiServer = fiber.New(config)
+	ApiServer.Use(middleware.WithTimeout(5 * time.Second))
 }

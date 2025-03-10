@@ -3,71 +3,82 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/MarcinZ20/bankAPI/api/routes"
-	"github.com/MarcinZ20/bankAPI/config"
-	"github.com/MarcinZ20/bankAPI/pkg/handlers/db"
+	"github.com/MarcinZ20/bankAPI/internal/app"
+	"github.com/MarcinZ20/bankAPI/internal/database"
+	"github.com/MarcinZ20/bankAPI/internal/importer"
 	"github.com/joho/godotenv"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func main() {
+	// Load environment variables
 	if err := godotenv.Load(); err != nil {
-		fmt.Print(fmt.Errorf("error while loading .env: %v", err))
+		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	config.ConnectDb()
-	defer config.MongoClient.Disconnect(context.Background())
+	// Create a base context with cancellation
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	collection, err := db.GetCollection(config.MongoClient)
+	// Handle graceful shutdown
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt, syscall.SIGTERM)
+
+	go func() {
+		<-shutdown
+		log.Println("Received shutdown signal. Initiating graceful shutdown...")
+		cancel()
+	}()
+
+	// Initialize database
+	db, err := database.Connect(ctx)
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+	defer db.Disconnect(ctx)
+
+	// Import data from spreadsheet
+	spreadsheetID := os.Getenv("SPREADSHEET_ID")
+	if spreadsheetID == "" {
+		log.Fatal("SPREADSHEET_ID environment variable is not set")
 	}
 
-	indexModel := mongo.IndexModel{
-		Keys: bson.D{{
-			Key: "swiftCode", Value: 1,
-		}},
+	log.Println("Starting data import...")
+	if err := importer.ImportSpreadsheetData(ctx, spreadsheetID); err != nil {
+		log.Fatalf("Failed to import data: %v", err)
 	}
+	log.Println("Data import completed successfully")
 
-	name, err := collection.Indexes().CreateOne(context.TODO(), indexModel)
-	if err != nil {
-		fmt.Printf("Couldnt create collection %v: %v", name, err)
-	}
+	// Initialize and configure API server
+	appConfig := app.Initialize()
+	routes.BankRoutes(appConfig.Server)
 
-	config.ConfigAPI()
-	routes.BankRoutes(config.ApiServer)
+	// Start server in a goroutine
+	serverErrors := make(chan error, 1)
+	go func() {
+		log.Printf("Starting server on port %s\n", os.Getenv("API_SERVER_PORT"))
+		if err := appConfig.Server.Listen(os.Getenv("API_SERVER_PORT")); err != nil {
+			serverErrors <- fmt.Errorf("server error: %w", err)
+		}
+	}()
 
-	// mySpreadsheet := models.GoogleSpreadsheet{
-	// 	SpreadsheetId: os.Getenv("SPREADSHEET_ID"),
-	// }
+	// Wait for shutdown or error
+	select {
+	case err := <-serverErrors:
+		log.Printf("Server error: %v\n", err)
+	case <-ctx.Done():
+		log.Println("Shutting down server...")
+		shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+		defer shutdownCancel()
 
-	// response, err := spreadsheet.FetchSpreadsheetData(&mySpreadsheet)
-	// if err != nil {
-	// 	fmt.Println("Error")
-	// }
-
-	// var rawData []models.Bank
-	// err = parser.ParseBankData(response, &rawData)
-	// if err != nil {
-	// 	fmt.Println("Error")
-	// }
-
-	// for _, bank := range rawData {
-	// 	validationResult := validation.ValidateBankEntity(bank)
-	// 	if !validationResult.IsValid {
-	// 		fmt.Println(validationResult.Errors)
-	// 	}
-	// }
-
-	// transformedData := transform.Transform(&rawData)
-
-	// db.SaveEntities(collection, transformedData)
-
-	if err := config.ApiServer.Listen(os.Getenv("API_SERVER_PORT")); err != nil {
-		fmt.Printf("Server error: %v\n", err)
+		if err := appConfig.Server.ShutdownWithContext(shutdownCtx); err != nil {
+			log.Printf("Error during server shutdown: %v\n", err)
+		}
 	}
 }

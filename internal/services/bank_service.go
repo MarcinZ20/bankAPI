@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/MarcinZ20/bankAPI/pkg/models"
-	"github.com/MarcinZ20/bankAPI/pkg/repository"
+	"github.com/MarcinZ20/bankAPI/internal/repository"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MarcinZ20/bankAPI/internal/utils"
+	"github.com/MarcinZ20/bankAPI/pkg/utils"
 	"github.com/MarcinZ20/bankAPI/pkg/models"
 )
 

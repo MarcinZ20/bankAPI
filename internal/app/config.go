@@ -27,7 +27,6 @@ func Initialize() *Config {
 		StrictRouting: true,
 		JSONEncoder:   json.Marshal,
 		JSONDecoder:   json.Unmarshal,
-		BodyLimit:     10 * 1024 * 1024, // 10MB
 		ReadTimeout:   5 * time.Second,
 	}
 

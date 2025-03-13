@@ -1,6 +1,5 @@
 package models
 
-// TODO: Check if getters are really necessary
 // Branch represents a branch data structure to be processed by the parser
 type Branch struct {
 	Address       string `bson:"address" json:"address"`

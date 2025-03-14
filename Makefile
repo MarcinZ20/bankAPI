@@ -1,4 +1,4 @@
-.PHONY: docker-run docker-stop
+.PHONY: docker-run docker-stop test
 
 .DEFAULT_GOAL := help
 
@@ -14,3 +14,7 @@ docker-run:
 ### stop all docker containers
 docker-stop:
 	$(DOCKER_COMPOSE) down -v
+
+### run tests
+test:
+	$(GO) test ./...

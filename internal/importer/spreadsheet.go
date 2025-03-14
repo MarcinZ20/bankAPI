@@ -33,6 +33,7 @@ func ImportSpreadsheetData(ctx context.Context, spreadsheetID string) error {
 	}
 
 	var rawData []models.Bank
+	var parser = parser.NewParser()
 	if err := parser.ParseBankData(response, &rawData); err != nil {
 		return fmt.Errorf("failed to parse bank data: %w", err)
 	}
@@ -50,7 +51,8 @@ func ImportSpreadsheetData(ctx context.Context, spreadsheetID string) error {
 		return fmt.Errorf("validation errors occurred: %v", validationErrors)
 	}
 
-	transformedData := transform.Transform(&rawData)
+	transformer := transform.ModelTransformer{}
+	transformedData := transformer.TransformBankData(&rawData)
 
 	// For clean setup, clean existing data
 	if err := db.Collection.Drop(ctx); err != nil {

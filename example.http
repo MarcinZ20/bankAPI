@@ -1,0 +1,62 @@
+### Variables
+@baseUrl = http://localhost:8080/v1
+@swiftCode = DEUTDEFFXXX
+@countryCode = DE
+
+### Get bank by SWIFT code
+GET {{baseUrl}}/swift-codes/{{swiftCode}}
+
+### Get banks by country code
+GET {{baseUrl}}/swift-codes/country/{{countryCode}}
+
+### Add new bank (Deutsche Bank HQ)
+POST {{baseUrl}}/swift-codes
+Content-Type: application/json
+
+{
+    "swiftCode": "DEUTDEFFXXX",
+    "bankName": "Deutsche Bank",
+    "countryISO2": "DE",
+    "countryName": "Germany",
+    "address": "Taunusanlage 12",
+    "isHeadquarter": true
+}
+
+### Add new bank branch (Deutsche Bank Berlin)
+POST {{baseUrl}}/swift-codes
+Content-Type: application/json
+
+{
+    "swiftCode": "DEUTDEFF100",
+    "bankName": "Deutsche Bank Berlin",
+    "countryISO2": "DE",
+    "countryName": "Germany",
+    "address": "Unter den Linden 13-15",
+    "isHeadquarter": false
+}
+
+### Delete bank by SWIFT code
+DELETE {{baseUrl}}/swift-codes/{{swiftCode}}
+
+### Example with curl commands
+
+# Get bank by SWIFT code
+curl -X GET http://localhost:8080/v1/swift-codes/DEUTDEFFXXX | jq "."
+
+# Get banks by country code
+curl -X GET http://localhost:8080/v1/swift-codes/country/DE | jq "."
+
+# Add new bank
+curl -X POST http://localhost:8080/v1/swift-codes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "swiftCode": "DEUTDEFFXXX",
+    "bankName": "Deutsche Bank",
+    "countryISO2": "DE",
+    "countryName": "Germany",
+    "address": "Taunusanlage 12",
+    "isHeadquarter": true
+  }'
+
+# Delete bank
+curl -X DELETE http://localhost:8080/v1/swift-codes/DEUTDEFFXXX

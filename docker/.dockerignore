@@ -1,0 +1,24 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# IDE specific files
+.vscode
+
+# Binaries and dependencies
+bin/
+vendor/
+
+# Testing
+*_test.go
+*.test
+
+# Misc
+*.md
+tmp/
+.DS_Store 

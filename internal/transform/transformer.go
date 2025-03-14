@@ -17,6 +17,7 @@ func TransformRequestModel(branch *models.Branch) {
 	branch.CountryISO2 = strings.ToUpper(branch.CountryISO2)
 	branch.BankName = strings.ToUpper(branch.BankName)
 	branch.CountryName = strings.ToUpper(branch.CountryName)
+	branch.Address = strings.Trim(branch.Address, " ")
 }
 
 // Transforms Bank entity into Headquarter object

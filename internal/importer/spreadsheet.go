@@ -33,6 +33,7 @@ func ImportSpreadsheetData(ctx context.Context, spreadsheetID string) error {
 	}
 
 	var rawData []models.Bank
+	var parser = parser.NewParser()
 	if err := parser.ParseBankData(response, &rawData); err != nil {
 		return fmt.Errorf("failed to parse bank data: %w", err)
 	}

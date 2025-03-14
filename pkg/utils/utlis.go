@@ -13,8 +13,10 @@ func IsLowercase(s string) bool {
 	return s == strings.ToLower(s)
 }
 
+// SWIFT code validation was done via regex according to the rules stated here:
+// https://www.geeksforgeeks.org/how-to-validate-swift-bic-code-using-regex/
 func IsValidSwiftCodeFormat(swiftCode string) bool {
-	swiftRegex := `^[A-Z0-9]{8}(XXX|[A-Z0-9]{3})?$`
+	swiftRegex := `^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$`
 	matched, _ := regexp.MatchString(swiftRegex, swiftCode)
 	return matched
 }

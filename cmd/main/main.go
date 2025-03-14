@@ -69,7 +69,6 @@ func main() {
 	appConfig := app.Initialize()
 	routes.BankRoutes(appConfig.Server)
 
-	// Start server in a goroutine
 	serverErrors := make(chan error, 1)
 	go func() {
 		port := os.Getenv("API_SERVER_PORT")
@@ -82,7 +81,6 @@ func main() {
 		}
 	}()
 
-	// Wait for shutdown or error
 	select {
 	case err := <-serverErrors:
 		log.Printf("Server error: %v\n", err)

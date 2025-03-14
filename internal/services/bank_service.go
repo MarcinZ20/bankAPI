@@ -11,23 +11,24 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// BankService handles business logic for bank operations
+// Handles business logic for bank operations
 type BankService struct {
 	repo *repository.BankRepository
 }
 
-// NewBankService creates a new bank service
+// Creates a new bank service
 func NewBankService(collection *mongo.Collection) *BankService {
 	return &BankService{
 		repo: repository.NewBankRepository(collection),
 	}
 }
 
+// Checks if the service is initialized
 func (s *BankService) IsInitialized() bool {
 	return s != nil && s.repo != nil
 }
 
-// GetHeadquarter retrieves a headquarter by SWIFT code
+// Retrieves a headquarter by SWIFT code
 func (s *BankService) GetHeadquarter(ctx context.Context, swiftCode string) (*models.Headquarter, error) {
 	if !utils.IsValidSwiftCodeFormat(swiftCode) {
 		return nil, fmt.Errorf("invalid SWIFT code format")
@@ -38,7 +39,7 @@ func (s *BankService) GetHeadquarter(ctx context.Context, swiftCode string) (*mo
 	return s.repo.FindHeadquarter(ctx, swiftCode)
 }
 
-// GetBranch retrieves a branch by SWIFT code
+// Retrieves a branch by SWIFT code
 func (s *BankService) GetBranch(ctx context.Context, swiftCode string) (*models.Branch, error) {
 	if !utils.IsValidSwiftCodeFormat(swiftCode) {
 		return nil, fmt.Errorf("invalid SWIFT code format")
@@ -50,7 +51,7 @@ func (s *BankService) GetBranch(ctx context.Context, swiftCode string) (*models.
 	return s.repo.FindBranch(ctx, swiftCode, parentHqSwiftCode)
 }
 
-// GetBanksByCountryCode retrieves all banks in a given country
+// Retrieves all banks in a given country
 func (s *BankService) GetBanksByCountryCode(ctx context.Context, countryCode string) ([]models.Headquarter, error) {
 	if !utils.IsValidCountryCode(countryCode) {
 		return nil, fmt.Errorf("invalid country code format")
@@ -58,7 +59,7 @@ func (s *BankService) GetBanksByCountryCode(ctx context.Context, countryCode str
 	return s.repo.FindBanksByCountry(ctx, countryCode)
 }
 
-// AddHeadquarter creates a new headquarter
+// Creates a new headquarter
 func (s *BankService) AddHeadquarter(ctx context.Context, hq *models.Headquarter) error {
 	if err := s.validateHeadquarter(hq); err != nil {
 		return err
@@ -66,7 +67,7 @@ func (s *BankService) AddHeadquarter(ctx context.Context, hq *models.Headquarter
 	return s.repo.CreateHeadquarter(ctx, hq)
 }
 
-// AddBranch adds a new branch to a headquarter
+// Adds a new branch to a headquarter
 func (s *BankService) AddBranch(ctx context.Context, parentSwiftCode string, branch *models.Branch) error {
 	if err := s.validateBranch(branch); err != nil {
 		return err
@@ -77,7 +78,7 @@ func (s *BankService) AddBranch(ctx context.Context, parentSwiftCode string, bra
 	return s.repo.AddBranch(ctx, parentSwiftCode, branch)
 }
 
-// DeleteHeadquarter deletes a headquarter and all its branches
+// Deletes a headquarter and all its branches
 func (s *BankService) DeleteHeadquarter(ctx context.Context, swiftCode string) error {
 	if !utils.IsValidSwiftCodeFormat(swiftCode) {
 		return fmt.Errorf("invalid SWIFT code format")
@@ -88,7 +89,7 @@ func (s *BankService) DeleteHeadquarter(ctx context.Context, swiftCode string) e
 	return s.repo.DeleteHeadquarter(ctx, swiftCode)
 }
 
-// DeleteBranch removes a branch from its headquarter
+// Removes a branch from its headquarter
 func (s *BankService) DeleteBranch(ctx context.Context, swiftCode, parentSwiftCode string) error {
 	if !utils.IsValidSwiftCodeFormat(swiftCode) || !utils.IsValidSwiftCodeFormat(parentSwiftCode) {
 		return fmt.Errorf("invalid SWIFT code format")
@@ -102,7 +103,7 @@ func (s *BankService) DeleteBranch(ctx context.Context, swiftCode, parentSwiftCo
 	return s.repo.DeleteBranch(ctx, swiftCode, parentSwiftCode)
 }
 
-// validateHeadquarter validates headquarter data
+// Validates headquarter data
 func (s *BankService) validateHeadquarter(hq *models.Headquarter) error {
 	if hq == nil {
 		return fmt.Errorf("headquarter cannot be nil")
@@ -125,7 +126,7 @@ func (s *BankService) validateHeadquarter(hq *models.Headquarter) error {
 	return nil
 }
 
-// validateBranch validates branch data
+// Validates branch data
 func (s *BankService) validateBranch(branch *models.Branch) error {
 	if branch == nil {
 		return fmt.Errorf("branch cannot be nil")

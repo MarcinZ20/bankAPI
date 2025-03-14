@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MarcinZ20/bankAPI/pkg/utils"
 	"github.com/MarcinZ20/bankAPI/pkg/models"
+	"github.com/MarcinZ20/bankAPI/pkg/utils"
 )
 
 type ValidationResult struct {
@@ -19,6 +19,7 @@ type Validator interface {
 
 type SwiftCodeValidator struct{}
 
+// Validates SWIFT code integrity
 func (v SwiftCodeValidator) Validate(value string) []error {
 	length := len(value)
 	errors := []error{}
@@ -36,6 +37,7 @@ func (v SwiftCodeValidator) Validate(value string) []error {
 
 type CountryISO2Validator struct{}
 
+// Validates ISO2 country code integrity
 func (v CountryISO2Validator) Validate(value string) []error {
 	length := len(value)
 	errors := []error{}
@@ -51,6 +53,7 @@ func (v CountryISO2Validator) Validate(value string) []error {
 	return errors
 }
 
+// Validates BankEntity object by checking SWIFT code and ISO2 code
 func ValidateBankEntity(entity any) ValidationResult {
 	result := ValidationResult{
 		IsValid: true,
@@ -68,6 +71,7 @@ func ValidateBankEntity(entity any) ValidationResult {
 	return result
 }
 
+// Validates single field by running propper checks
 func validateField(fieldName string, value string, validators []Validator) *ValidationResult {
 	result := &ValidationResult{IsValid: true}
 
@@ -84,6 +88,7 @@ func validateField(fieldName string, value string, validators []Validator) *Vali
 	return result
 }
 
+// Appends thrown errors into a ValidationResult
 func (v *ValidationResult) appendErrors(result *ValidationResult) {
 	if !v.IsValid {
 		result.IsValid = false

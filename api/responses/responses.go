@@ -7,12 +7,12 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// Response interface defines how to convert domain models to response DTOs
+// Defines how to convert domain models to response DTOs
 type Response interface {
 	FromModel(models.BankEntity) error
 }
 
-// NewSuccessResponse creates a consistent success response with status 200 OK
+// Creates a consistent success response with status 200 OK
 func NewSuccessResponse(c *fiber.Ctx, data any) error {
 	return c.Status(fiber.StatusOK).JSON(data)
 }

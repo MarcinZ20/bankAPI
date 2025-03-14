@@ -14,7 +14,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// Config holds database configuration and connection details
+// Holds database configuration and connection details
 type Config struct {
 	Client     *mongo.Client
 	Collection *mongo.Collection
@@ -22,7 +22,7 @@ type Config struct {
 
 var instance *Config
 
-// Connect establishes database connection and initializes indexes
+// Establishes database connection and initializes indexes
 func Connect(ctx context.Context) (*Config, error) {
 	if instance != nil {
 		return instance, nil
@@ -88,7 +88,7 @@ func Connect(ctx context.Context) (*Config, error) {
 	return instance, nil
 }
 
-// createIndexes ensures all required indexes exist
+// Ensures all required indexes exist
 func createIndexes(ctx context.Context, collection *mongo.Collection) error {
 	indexCtx, indexCancel := context.WithTimeout(ctx, 10*time.Second)
 	defer indexCancel()
@@ -160,12 +160,12 @@ func createCollection(db *mongo.Database, name string) error {
 	return nil
 }
 
-// GetInstance returns the current database configuration instance
+// Returns the current database configuration instance
 func GetInstance() *Config {
 	return instance
 }
 
-// Disconnect closes the database connection
+// Closes the database connection
 func (c *Config) Disconnect(ctx context.Context) error {
 	if c.Client != nil {
 		return c.Client.Disconnect(ctx)

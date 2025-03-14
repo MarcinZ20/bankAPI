@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// Sets up a test db
 func setupTestDB(t *testing.T) (*mongo.Collection, func()) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -38,7 +39,7 @@ func TestBankRepository_FindHeadquarter(t *testing.T) {
 	repo := NewBankRepository(collection)
 	ctx := context.Background()
 
-	// Test data
+	// random test data
 	hq := &models.Headquarter{
 		SwiftCode:     "DEUTDEFF",
 		BankName:      "Deutsche Bank",
@@ -47,7 +48,6 @@ func TestBankRepository_FindHeadquarter(t *testing.T) {
 		Branches:      []models.Branch{},
 	}
 
-	// Insert test data
 	_, err := collection.InsertOne(ctx, hq)
 	require.NoError(t, err)
 
@@ -88,7 +88,7 @@ func TestBankRepository_FindBranch(t *testing.T) {
 	repo := NewBankRepository(collection)
 	ctx := context.Background()
 
-	// Test data
+	// random test data
 	branch := models.Branch{
 		SwiftCode:   "DEUTDEFF100",
 		BankName:    "Deutsche Bank Berlin",
@@ -103,7 +103,6 @@ func TestBankRepository_FindBranch(t *testing.T) {
 		Branches:      []models.Branch{branch},
 	}
 
-	// Insert test data
 	_, err := collection.InsertOne(ctx, hq)
 	require.NoError(t, err)
 
@@ -147,8 +146,8 @@ func TestBankRepository_FindBanksByCountry(t *testing.T) {
 	repo := NewBankRepository(collection)
 	ctx := context.Background()
 
-	// Test data
-	hqs := []interface{}{
+	// just some random test data
+	hqs := []any{
 		&models.Headquarter{
 			SwiftCode:     "DEUTDEFF",
 			BankName:      "Deutsche Bank",
@@ -163,7 +162,6 @@ func TestBankRepository_FindBanksByCountry(t *testing.T) {
 		},
 	}
 
-	// Insert test data
 	_, err := collection.InsertMany(ctx, hqs)
 	require.NoError(t, err)
 
@@ -238,7 +236,6 @@ func TestBankRepository_CreateHeadquarter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean collection before each test
 			collection.Drop(ctx)
 			tt.setup()
 
@@ -249,7 +246,6 @@ func TestBankRepository_CreateHeadquarter(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			// Verify creation
 			var result models.Headquarter
 			err = collection.FindOne(ctx, bson.D{{Key: "swiftCode", Value: tt.hq.SwiftCode}}).Decode(&result)
 			assert.NoError(t, err)
@@ -297,7 +293,6 @@ func TestBankRepository_DeleteHeadquarter(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean collection before each test
 			collection.Drop(ctx)
 			tt.setup()
 
@@ -308,7 +303,6 @@ func TestBankRepository_DeleteHeadquarter(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			// Verify deletion
 			count, err := collection.CountDocuments(ctx, bson.D{{Key: "swiftCode", Value: tt.swiftCode}})
 			assert.NoError(t, err)
 			assert.Equal(t, int64(0), count)
@@ -365,7 +359,6 @@ func TestBankRepository_AddBranch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean collection before each test
 			collection.Drop(ctx)
 			tt.setup()
 
@@ -376,7 +369,6 @@ func TestBankRepository_AddBranch(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			// Verify branch addition
 			var result models.Headquarter
 			err = collection.FindOne(ctx, bson.D{{Key: "swiftCode", Value: tt.parentSwiftCode}}).Decode(&result)
 			assert.NoError(t, err)
@@ -434,7 +426,6 @@ func TestBankRepository_DeleteBranch(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean collection before each test
 			collection.Drop(ctx)
 			tt.setup()
 
@@ -445,7 +436,6 @@ func TestBankRepository_DeleteBranch(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			// Verify branch deletion
 			var result models.Headquarter
 			err = collection.FindOne(ctx, bson.D{{Key: "swiftCode", Value: tt.parentSwift}}).Decode(&result)
 			assert.NoError(t, err)

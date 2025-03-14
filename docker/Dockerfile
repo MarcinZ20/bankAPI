@@ -1,8 +1,8 @@
 FROM golang:1.24-alpine AS builder
 
-RUN apk add --no-cache git ca-certificates
+LABEL maintainer="marcin_zub@outlook.com"
 
-RUN addgroup app && adduser -S -G app app
+RUN apk add --no-cache git ca-certificates
 
 WORKDIR /build
 
@@ -20,15 +20,16 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build \
 # Final stage
 FROM scratch
 
-# Copy SSL certificates for HTTPS support
+# SSL certificates for HTTPS support (google sheets)
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 
 WORKDIR /app
 
 COPY --from=builder /build/app .
+COPY --from=builder /build/.env.example /app/.env
 
-# non-root alpine user
-USER 65532:65532
+# non root user
+USER 65534:65534
 
 EXPOSE 8080
 

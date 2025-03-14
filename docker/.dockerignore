@@ -20,6 +20,5 @@ vendor/
 
 # Misc
 *.md
-.env.example
 tmp/
 .DS_Store 

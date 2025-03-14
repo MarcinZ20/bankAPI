@@ -3,22 +3,20 @@ services:
     image: bankapi:${TAG:-latest}
     container_name: bankapi-service
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ..
+      dockerfile: docker/Dockerfile
       args:
-        - GO_ENV=production
-      tags:
-        - "bankapi:${TAG:-latest}"
-        - "bankapi:latest"
+        - GO_ENV=${GO_ENV:-production}
     ports:
-      - "8080:8080"
+      - "${API_PORT:-8080}:8080"
+    env_file:
+      - ../.env
     environment:
-      - MONGO_URI=mongodb://mongodb:27017
-      - MONGO_DATABASE=${MONGO_DATABASE:-bankdb}
+      - MONGO_URI=${MONGO_URI:-mongodb://mongodb:27017}
+      - MONGO_DATABASE=${MONGO_DATABASE:-bank_db}
       - MONGO_COLLECTION=${MONGO_COLLECTION:-banks}
-      - API_SERVER_PORT=:8080
-    volumes:
-      - ./.env:/app/.env:ro
+      - API_SERVER_PORT=${API_SERVER_PORT:-:8080}
+      - SPREADSHEET_ID=${SPREADSHEET_ID:-1iFFqsu_xruvVKzXAadAAlDBpIuU51v-pfIEU5HeGa8w}
     depends_on:
       - mongodb
     networks:
@@ -29,14 +27,14 @@ services:
     image: mongo:latest
     container_name: bankapi-mongodb
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
     networks:
       - bank-network
     restart: unless-stopped
     environment:
-      - MONGO_INITDB_DATABASE=${MONGO_DATABASE:-bankdb}
+      - MONGO_INITDB_DATABASE=${MONGO_DATABASE:-bank_db}
 
 networks:
   bank-network:

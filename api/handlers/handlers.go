@@ -142,7 +142,8 @@ func AddNewSwiftCode(c *fiber.Ctx) error {
 		return responses.ValidationError(fmt.Sprintf("Invalid country code format: %v", record.CountryISO2))
 	}
 
-	transform.TransformRequestModel(record)
+	transformer := transform.ModelTransformer{}
+	transformer.CleanRequestModel(record)
 
 	if strings.HasSuffix(record.SwiftCode, "XXX") {
 		if !record.IsHeadquarter {

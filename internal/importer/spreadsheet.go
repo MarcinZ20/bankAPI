@@ -50,7 +50,8 @@ func ImportSpreadsheetData(ctx context.Context, spreadsheetID string) error {
 		return fmt.Errorf("validation errors occurred: %v", validationErrors)
 	}
 
-	transformedData := transform.Transform(&rawData)
+	transformer := transform.ModelTransformer{}
+	transformedData := transformer.TransformBankData(&rawData)
 
 	// For clean setup, clean existing data
 	if err := db.Collection.Drop(ctx); err != nil {

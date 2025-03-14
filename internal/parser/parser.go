@@ -8,6 +8,7 @@ import (
 	"github.com/MarcinZ20/bankAPI/pkg/models"
 )
 
+// Parses bank data from response string to @Bank objects
 func ParseBankData(response string, data *[]models.Bank) error {
 	reader := csv.NewReader(strings.NewReader(response))
 	rows, err := reader.ReadAll()

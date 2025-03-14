@@ -6,7 +6,7 @@ import (
 
 	"github.com/MarcinZ20/bankAPI/api/middleware"
 	"github.com/MarcinZ20/bankAPI/api/responses"
-	"github.com/MarcinZ20/bankAPI/internal/database"
+	"github.com/MarcinZ20/bankAPI/internal/services"
 	"github.com/MarcinZ20/bankAPI/internal/transform"
 	"github.com/MarcinZ20/bankAPI/pkg/models"
 	"github.com/MarcinZ20/bankAPI/pkg/utils"
@@ -20,9 +20,9 @@ func GetSwiftCodesBySwiftCode(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get request context")
 	}
 
-	db := database.GetInstance()
-	if db == nil {
-		return responses.DatabaseError(fmt.Errorf("database connection not initialized"))
+	sm := services.GetInstance()
+	if sm == nil || !sm.IsInitialized() {
+		return responses.DatabaseError(fmt.Errorf("service not initialized"))
 	}
 
 	swiftCode := c.Params("swiftCode")
@@ -31,7 +31,7 @@ func GetSwiftCodesBySwiftCode(c *fiber.Ctx) error {
 	}
 
 	if strings.HasSuffix(swiftCode, "XXX") {
-		hq, err := db.GetHeadquarter(ctx, swiftCode)
+		hq, err := sm.BankService.GetHeadquarter(ctx, swiftCode)
 		if err != nil {
 			if err == mongo.ErrNoDocuments {
 				return responses.NotFoundError("headquarter", swiftCode)
@@ -47,7 +47,7 @@ func GetSwiftCodesBySwiftCode(c *fiber.Ctx) error {
 		return responses.NewSuccessResponse(c, response)
 	}
 
-	branch, err := db.GetBranch(ctx, swiftCode)
+	branch, err := sm.BankService.GetBranch(ctx, swiftCode)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return responses.NotFoundError("branch", swiftCode)
@@ -69,9 +69,9 @@ func GetSwiftCodesByCountryCode(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get request context")
 	}
 
-	db := database.GetInstance()
-	if db == nil {
-		return responses.DatabaseError(fmt.Errorf("database connection not initialized"))
+	sm := services.GetInstance()
+	if sm == nil || !sm.IsInitialized() {
+		return responses.DatabaseError(fmt.Errorf("service not initialized"))
 	}
 
 	countryCode := c.Params("countryISO2")
@@ -79,7 +79,7 @@ func GetSwiftCodesByCountryCode(c *fiber.Ctx) error {
 		return responses.ValidationError(fmt.Sprintf("Invalid country code format: %v", countryCode))
 	}
 
-	foundData, err := db.GetBanksByCountry(ctx, countryCode)
+	foundData, err := sm.BankService.GetBanksByCountryCode(ctx, countryCode)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return responses.NotFoundError("records", countryCode)
@@ -124,9 +124,9 @@ func AddNewSwiftCode(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get request context")
 	}
 
-	db := database.GetInstance()
-	if db == nil {
-		return responses.DatabaseError(fmt.Errorf("database connection not initialized"))
+	sm := services.GetInstance()
+	if sm == nil || !sm.IsInitialized() {
+		return responses.DatabaseError(fmt.Errorf("service not initialized"))
 	}
 
 	record := new(models.Branch)
@@ -159,7 +159,7 @@ func AddNewSwiftCode(c *fiber.Ctx) error {
 			Branches:      []models.Branch{},
 		}
 
-		if err := db.AddHeadquarter(ctx, &hq); err != nil {
+		if err := sm.BankService.AddHeadquarter(ctx, &hq); err != nil {
 			if err.Error() == "headquarter already exists" {
 				return responses.AlreadyExistsError(fmt.Sprintf("Headquarter with SWIFT code %s already exists", record.SwiftCode))
 			}
@@ -172,7 +172,7 @@ func AddNewSwiftCode(c *fiber.Ctx) error {
 	}
 
 	parentHqSwiftCode := record.SwiftCode[0:8] + "XXX"
-	if err := db.AddBranch(ctx, parentHqSwiftCode, record); err != nil {
+	if err := sm.BankService.AddBranch(ctx, parentHqSwiftCode, record); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return responses.NotFoundError("parent headquarter", parentHqSwiftCode)
 		}
@@ -193,9 +193,9 @@ func DeleteSwiftCode(c *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusInternalServerError, "Failed to get request context")
 	}
 
-	db := database.GetInstance()
-	if db == nil {
-		return responses.DatabaseError(fmt.Errorf("database connection not initialized"))
+	sm := services.GetInstance()
+	if sm == nil || !sm.IsInitialized() {
+		return responses.DatabaseError(fmt.Errorf("service not initialized"))
 	}
 
 	swiftCode := c.Params("swiftCode")
@@ -204,7 +204,7 @@ func DeleteSwiftCode(c *fiber.Ctx) error {
 	}
 
 	if strings.HasSuffix(swiftCode, "XXX") {
-		if err := db.DeleteHeadquarter(ctx, swiftCode); err != nil {
+		if err := sm.BankService.DeleteHeadquarter(ctx, swiftCode); err != nil {
 			if err == mongo.ErrNoDocuments {
 				return responses.NotFoundError("headquarter", swiftCode)
 			}
@@ -217,7 +217,7 @@ func DeleteSwiftCode(c *fiber.Ctx) error {
 	}
 
 	parentHqSwiftCode := swiftCode[0:8] + "XXX"
-	if err := db.DeleteBranch(ctx, swiftCode, parentHqSwiftCode); err != nil {
+	if err := sm.BankService.DeleteBranch(ctx, swiftCode, parentHqSwiftCode); err != nil {
 		if err == mongo.ErrNoDocuments {
 			return responses.NotFoundError("branch", swiftCode)
 		}

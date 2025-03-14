@@ -8,14 +8,14 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
-// Config holds application configuration
+// Holds application configuration
 type Config struct {
 	Server *fiber.App
 }
 
 var instance *Config
 
-// Initialize sets up the application configuration
+// Sets up the application configuration
 func Initialize() *Config {
 	if instance != nil {
 		return instance
@@ -27,7 +27,6 @@ func Initialize() *Config {
 		StrictRouting: true,
 		JSONEncoder:   json.Marshal,
 		JSONDecoder:   json.Unmarshal,
-		BodyLimit:     10 * 1024 * 1024, // 10MB
 		ReadTimeout:   5 * time.Second,
 	}
 
@@ -41,7 +40,7 @@ func Initialize() *Config {
 	return instance
 }
 
-// GetInstance returns the current application configuration instance
+// Returns the current application configuration instance
 func GetInstance() *Config {
 	return instance
 }

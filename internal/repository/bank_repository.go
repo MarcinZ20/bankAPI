@@ -10,19 +10,19 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// BankRepository handles all database operations
+// Handles all database operations
 type BankRepository struct {
 	collection *mongo.Collection
 }
 
-// NewBankRepository creates a new bank repository
+// Creates a new bank repository
 func NewBankRepository(collection *mongo.Collection) *BankRepository {
 	return &BankRepository{
 		collection: collection,
 	}
 }
 
-// FindHeadquarter finds a headquarter by SWIFT code
+// Finds a headquarter by SWIFT code
 func (r *BankRepository) FindHeadquarter(ctx context.Context, swiftCode string) (*models.Headquarter, error) {
 	filter := bson.D{
 		{Key: "swiftCode", Value: swiftCode},
@@ -38,7 +38,7 @@ func (r *BankRepository) FindHeadquarter(ctx context.Context, swiftCode string) 
 	return &hq, nil
 }
 
-// FindBranch finds a branch by SWIFT code
+// Finds a branch by SWIFT code
 func (r *BankRepository) FindBranch(ctx context.Context, swiftCode, parentSwiftCode string) (*models.Branch, error) {
 	filter := bson.D{
 		{Key: "swiftCode", Value: parentSwiftCode},
@@ -63,7 +63,7 @@ func (r *BankRepository) FindBranch(ctx context.Context, swiftCode, parentSwiftC
 	return &hq.Branches[0], nil
 }
 
-// FindBanksByCountry finds all banks in a given country
+// Finds all banks in a given country
 func (r *BankRepository) FindBanksByCountry(ctx context.Context, countryCode string) ([]models.Headquarter, error) {
 	filter := bson.D{
 		{Key: "countryISO2", Value: countryCode},
@@ -88,7 +88,7 @@ func (r *BankRepository) FindBanksByCountry(ctx context.Context, countryCode str
 	return foundData, nil
 }
 
-// CreateHeadquarter creates a new headquarter
+// Creates a new headquarter
 func (r *BankRepository) CreateHeadquarter(ctx context.Context, hq *models.Headquarter) error {
 	exists := bson.D{
 		{Key: "swiftCode", Value: hq.SwiftCode},
@@ -108,7 +108,7 @@ func (r *BankRepository) CreateHeadquarter(ctx context.Context, hq *models.Headq
 	return nil
 }
 
-// AddBranch adds a new branch to a headquarter
+// Adds a new branch to a headquarter
 func (r *BankRepository) AddBranch(ctx context.Context, parentSwiftCode string, branch *models.Branch) error {
 	filter := bson.D{
 		{Key: "swiftCode", Value: parentSwiftCode},
@@ -146,7 +146,7 @@ func (r *BankRepository) AddBranch(ctx context.Context, parentSwiftCode string, 
 	return nil
 }
 
-// DeleteHeadquarter deletes a headquarter and all its branches
+// Deletes a headquarter and all its branches
 func (r *BankRepository) DeleteHeadquarter(ctx context.Context, swiftCode string) error {
 	filter := bson.D{
 		{Key: "swiftCode", Value: swiftCode},
@@ -165,7 +165,7 @@ func (r *BankRepository) DeleteHeadquarter(ctx context.Context, swiftCode string
 	return nil
 }
 
-// DeleteBranch removes a branch from its headquarter
+// Removes a branch from its headquarter
 func (r *BankRepository) DeleteBranch(ctx context.Context, swiftCode, parentSwiftCode string) error {
 	filter := bson.D{
 		{Key: "swiftCode", Value: parentSwiftCode},

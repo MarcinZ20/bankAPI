@@ -6,14 +6,14 @@ import (
 	"time"
 
 	"github.com/MarcinZ20/bankAPI/internal/database"
-	"github.com/MarcinZ20/bankAPI/internal/spreadsheet"
-	"github.com/MarcinZ20/bankAPI/pkg/models"
 	"github.com/MarcinZ20/bankAPI/internal/parser"
+	"github.com/MarcinZ20/bankAPI/internal/spreadsheet"
 	"github.com/MarcinZ20/bankAPI/internal/transform"
 	"github.com/MarcinZ20/bankAPI/internal/validation"
+	"github.com/MarcinZ20/bankAPI/pkg/models"
 )
 
-// ImportSpreadsheetData handles the data import process from a Google Spreadsheet
+// Handles the data import process from a Google Spreadsheet
 func ImportSpreadsheetData(ctx context.Context, spreadsheetID string) error {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
@@ -27,19 +27,16 @@ func ImportSpreadsheetData(ctx context.Context, spreadsheetID string) error {
 		SpreadsheetId: spreadsheetID,
 	}
 
-	// Fetch data from spreadsheet
 	response, err := spreadsheet.FetchData(googleSpreadsheet)
 	if err != nil {
 		return fmt.Errorf("failed to fetch spreadsheet data: %w", err)
 	}
 
-	// Parse raw data
 	var rawData []models.Bank
 	if err := parser.ParseBankData(response, &rawData); err != nil {
 		return fmt.Errorf("failed to parse bank data: %w", err)
 	}
 
-	// Validate data
 	var validationErrors []error
 	for i, bank := range rawData {
 		result := validation.ValidateBankEntity(bank)
@@ -53,15 +50,13 @@ func ImportSpreadsheetData(ctx context.Context, spreadsheetID string) error {
 		return fmt.Errorf("validation errors occurred: %v", validationErrors)
 	}
 
-	// Transform data
 	transformedData := transform.Transform(&rawData)
 
-	// Clear existing data
+	// For clean setup, clean existing data
 	if err := db.Collection.Drop(ctx); err != nil {
 		return fmt.Errorf("failed to clear existing data: %w", err)
 	}
 
-	// Insert new data
 	var documents []any
 	for _, bank := range *transformedData {
 		documents = append(documents, bank)

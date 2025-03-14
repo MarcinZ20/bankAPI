@@ -6,14 +6,15 @@ import (
 	"os"
 	"time"
 
-	"github.com/MarcinZ20/bankAPI/pkg/models"
+	"slices"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// Config holds database configuration and connection details
+// Holds database configuration and connection details
 type Config struct {
 	Client     *mongo.Client
 	Collection *mongo.Collection
@@ -21,42 +22,61 @@ type Config struct {
 
 var instance *Config
 
-// Connect establishes database connection and initializes indexes
+// Establishes database connection and initializes indexes
 func Connect(ctx context.Context) (*Config, error) {
 	if instance != nil {
 		return instance, nil
 	}
 
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
-
 	mongoUri := os.Getenv("MONGO_URI")
-	clientOptions := options.Client().SetTimeout(3 * time.Second).ApplyURI(mongoUri)
+	if mongoUri == "" {
+		return nil, fmt.Errorf("MONGO_URI environment variable is not set")
+	}
 
-	client, err := mongo.Connect(ctx, clientOptions)
+	connCtx, connCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer connCancel()
+
+	clientOptions := options.Client().SetTimeout(3 * time.Second).ApplyURI(mongoUri)
+	client, err := mongo.Connect(connCtx, clientOptions)
 	if err != nil {
 		return nil, fmt.Errorf("error while connecting to mongoDB: %w", err)
 	}
 
-	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+	defer func() {
+		if err != nil {
+			client.Disconnect(context.Background())
+		}
+	}()
+
+	pingCtx, pingCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer pingCancel()
+
+	if err := client.Ping(pingCtx, readpref.Primary()); err != nil {
 		return nil, fmt.Errorf("error while pinging the database: %w", err)
 	}
 
-	collection := client.Database(os.Getenv("MONGO_DATABASE")).Collection(os.Getenv("MONGO_COLLECTION"))
-
-	// Create indexes
-	indexes := []mongo.IndexModel{
-		{
-			Keys:    bson.D{{Key: "swiftCode", Value: 1}},
-			Options: options.Index().SetUnique(true),
-		},
-		{
-			Keys:    bson.D{{Key: "countryISO2", Value: 1}},
-			Options: options.Index().SetUnique(false),
-		},
+	dbName := os.Getenv("MONGO_DATABASE")
+	collName := os.Getenv("MONGO_COLLECTION")
+	if dbName == "" || collName == "" {
+		return nil, fmt.Errorf("MONGO_DATABASE and MONGO_COLLECTION environment variables must be set")
 	}
 
-	if _, err := collection.Indexes().CreateMany(ctx, indexes); err != nil {
+	collectionFilter := bson.D{{}}
+
+	collections, err := client.Database(dbName).ListCollectionNames(ctx, collectionFilter)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get collections")
+	}
+
+	if !slices.Contains(collections, collName) {
+		if err := createCollection(client.Database(dbName), collName); err != nil {
+			return nil, fmt.Errorf("there was no existing collection named %v", collName)
+		}
+	}
+
+	collection := client.Database(dbName).Collection(collName)
+
+	if err := createIndexes(ctx, collection); err != nil {
 		return nil, fmt.Errorf("failed to create indexes: %w", err)
 	}
 
@@ -68,165 +88,87 @@ func Connect(ctx context.Context) (*Config, error) {
 	return instance, nil
 }
 
-// GetInstance returns the current database configuration instance
+// Ensures all required indexes exist
+func createIndexes(ctx context.Context, collection *mongo.Collection) error {
+	indexCtx, indexCancel := context.WithTimeout(ctx, 10*time.Second)
+	defer indexCancel()
+
+	indexes := []mongo.IndexModel{
+		{
+			Keys:    bson.D{{Key: "swiftCode", Value: 1}},
+			Options: options.Index().SetUnique(true).SetName("swiftCode_unique"),
+		},
+		{
+			Keys:    bson.D{{Key: "countryISO2", Value: 1}},
+			Options: options.Index().SetUnique(false).SetName("countryISO2"),
+		},
+	}
+
+	// Drop all existing indexes except _id_
+	if _, err := collection.Indexes().DropAll(indexCtx); err != nil {
+		return fmt.Errorf("failed to drop existing indexes: %w", err)
+	}
+
+	// Create new indexes
+	if _, err := collection.Indexes().CreateMany(indexCtx, indexes); err != nil {
+		return fmt.Errorf("failed to create indexes: %w", err)
+	}
+
+	// Verify indexes were created correctly
+	cursor, err := collection.Indexes().List(indexCtx)
+	if err != nil {
+		return fmt.Errorf("failed to list indexes: %w", err)
+	}
+	defer cursor.Close(indexCtx)
+
+	var createdIndexes []bson.M
+	if err = cursor.All(indexCtx, &createdIndexes); err != nil {
+		return fmt.Errorf("failed to read created indexes: %w", err)
+	}
+
+	// Verify all required indexes exist
+	requiredIndexes := map[string]bool{
+		"_id_":             false,
+		"swiftCode_unique": false,
+		"countryISO2":      false,
+	}
+
+	for _, idx := range createdIndexes {
+		name := idx["name"].(string)
+		if _, ok := requiredIndexes[name]; ok {
+			requiredIndexes[name] = true
+		}
+	}
+
+	for name, found := range requiredIndexes {
+		if !found {
+			return fmt.Errorf("required index %s was not created", name)
+		}
+	}
+
+	return nil
+}
+
+func createCollection(db *mongo.Database, name string) error {
+	ctx, cancel := context.WithTimeout(context.TODO(), 5*time.Second)
+	defer cancel()
+
+	if err := db.CreateCollection(ctx, name); err != nil {
+		return fmt.Errorf("error while creating a collection: %w", err)
+	}
+
+	return nil
+}
+
+// Returns the current database configuration instance
 func GetInstance() *Config {
 	return instance
 }
 
-// Disconnect closes the database connection
+// Closes the database connection
 func (c *Config) Disconnect(ctx context.Context) error {
 	if c.Client != nil {
 		return c.Client.Disconnect(ctx)
 	}
-	return nil
-}
-
-// GetHeadquarter retrieves a headquarter by SWIFT code
-func (c *Config) GetHeadquarter(ctx context.Context, swiftCode string) (*models.Headquarter, error) {
-	filter := bson.D{
-		{Key: "swiftCode", Value: swiftCode},
-		{Key: "isHeadquarter", Value: true},
-	}
-
-	var hq models.Headquarter
-	err := c.Collection.FindOne(ctx, filter).Decode(&hq)
-	if err != nil {
-		return nil, err
-	}
-
-	return &hq, nil
-}
-
-// GetBranch retrieves a branch by SWIFT code
-func (c *Config) GetBranch(ctx context.Context, swiftCode string) (*models.Branch, error) {
-	parentHqSwiftCode := swiftCode[0:8] + "XXX"
-
-	filter := bson.D{
-		{Key: "swiftCode", Value: parentHqSwiftCode},
-		{Key: "isHeadquarter", Value: true},
-		{Key: "branches.swiftCode", Value: swiftCode},
-	}
-
-	opts := options.FindOne().SetProjection(bson.D{
-		{Key: "branches.$", Value: 1},
-	})
-
-	var hq models.Headquarter
-	err := c.Collection.FindOne(ctx, filter, opts).Decode(&hq)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(hq.Branches) == 0 {
-		return nil, mongo.ErrNoDocuments
-	}
-
-	return &hq.Branches[0], nil
-}
-
-// GetBanksByCountry retrieves all banks in a given country
-func (c *Config) GetBanksByCountry(ctx context.Context, countryCode string) ([]models.Headquarter, error) {
-	filter := bson.D{
-		{Key: "countryISO2", Value: countryCode},
-		{Key: "isHeadquarter", Value: true},
-	}
-
-	cursor, err := c.Collection.Find(ctx, filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(ctx)
-
-	var banks []models.Headquarter
-	if err := cursor.All(ctx, &banks); err != nil {
-		return nil, err
-	}
-
-	if len(banks) == 0 {
-		return nil, mongo.ErrNoDocuments
-	}
-
-	return banks, nil
-}
-
-// AddHeadquarter creates a new headquarter
-func (c *Config) AddHeadquarter(ctx context.Context, hq *models.Headquarter) error {
-	_, err := c.Collection.InsertOne(ctx, hq)
-	return err
-}
-
-// AddBranch adds a branch to an existing headquarter
-func (c *Config) AddBranch(ctx context.Context, parentSwiftCode string, branch *models.Branch) error {
-	filter := bson.D{
-		{Key: "swiftCode", Value: parentSwiftCode},
-		{Key: "isHeadquarter", Value: true},
-	}
-
-	update := bson.D{{
-		Key: "$push",
-		Value: bson.D{{
-			Key:   "branches",
-			Value: branch,
-		}},
-	}}
-
-	result, err := c.Collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.ModifiedCount == 0 {
-		return mongo.ErrNoDocuments
-	}
-
-	return nil
-}
-
-// DeleteHeadquarter deletes a headquarter and all its branches
-func (c *Config) DeleteHeadquarter(ctx context.Context, swiftCode string) error {
-	filter := bson.D{
-		{Key: "swiftCode", Value: swiftCode},
-		{Key: "isHeadquarter", Value: true},
-	}
-
-	result, err := c.Collection.DeleteOne(ctx, filter)
-	if err != nil {
-		return err
-	}
-
-	if result.DeletedCount == 0 {
-		return mongo.ErrNoDocuments
-	}
-
-	return nil
-}
-
-// DeleteBranch removes a branch from its headquarter
-func (c *Config) DeleteBranch(ctx context.Context, swiftCode, parentSwiftCode string) error {
-	filter := bson.D{
-		{Key: "swiftCode", Value: parentSwiftCode},
-		{Key: "isHeadquarter", Value: true},
-	}
-
-	update := bson.D{{
-		Key: "$pull",
-		Value: bson.D{{
-			Key: "branches",
-			Value: bson.D{{
-				Key:   "swiftCode",
-				Value: swiftCode,
-			}},
-		}},
-	}}
-
-	result, err := c.Collection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.ModifiedCount == 0 {
-		return mongo.ErrNoDocuments
-	}
-
 	return nil
 }

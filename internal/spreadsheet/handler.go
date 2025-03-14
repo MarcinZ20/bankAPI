@@ -10,7 +10,7 @@ import (
 	"github.com/MarcinZ20/bankAPI/pkg/models"
 )
 
-// FetchData retrieves data from a Google Spreadsheet
+// Retrieves data from a Google Spreadsheet
 func FetchData(spreadsheet *models.GoogleSpreadsheet) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()

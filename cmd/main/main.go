@@ -13,6 +13,7 @@ import (
 	"github.com/MarcinZ20/bankAPI/internal/app"
 	"github.com/MarcinZ20/bankAPI/internal/database"
 	"github.com/MarcinZ20/bankAPI/internal/importer"
+	"github.com/MarcinZ20/bankAPI/internal/services"
 	"github.com/joho/godotenv"
 )
 
@@ -43,6 +44,15 @@ func main() {
 	}
 	defer db.Disconnect(ctx)
 
+	log.Println("Successfully connected to database")
+
+	// Initialize services
+	serviceManager := services.NewServiceManager(db)
+	if !serviceManager.IsInitialized() {
+		log.Fatal("Failed to initialize services")
+	}
+	log.Println("Services initialized successfully")
+
 	// Import data from spreadsheet
 	spreadsheetID := os.Getenv("SPREADSHEET_ID")
 	if spreadsheetID == "" {
@@ -59,16 +69,18 @@ func main() {
 	appConfig := app.Initialize()
 	routes.BankRoutes(appConfig.Server)
 
-	// Start server in a goroutine
 	serverErrors := make(chan error, 1)
 	go func() {
-		log.Printf("Starting server on port %s\n", os.Getenv("API_SERVER_PORT"))
-		if err := appConfig.Server.Listen(os.Getenv("API_SERVER_PORT")); err != nil {
+		port := os.Getenv("API_SERVER_PORT")
+		if port == "" {
+			port = ":8080"
+		}
+		log.Printf("Starting server on port %s\n", port)
+		if err := appConfig.Server.Listen(port); err != nil {
 			serverErrors <- fmt.Errorf("server error: %w", err)
 		}
 	}()
 
-	// Wait for shutdown or error
 	select {
 	case err := <-serverErrors:
 		log.Printf("Server error: %v\n", err)

@@ -24,7 +24,13 @@ git clone https://github.com/MarcinZ20/bankAPI.git
 cd bankAPI
 ```
 
-3. Start the development environment:
+3. Setup .env file (default copy from .env.example)
+
+```bash
+make setup
+```
+
+4. Start the development environment:
 
 ```bash
 make docker-start
@@ -48,7 +54,13 @@ git clone https://github.com/MarcinZ20/bankAPI.git
 cd bankAPI
 ```
 
-3. Start the Docker containers:
+3. Setup .env
+
+```bash
+cp .env.example .env
+```
+
+4. Start the Docker containers:
 
 ```bash
 docker-compose up -d
@@ -58,8 +70,10 @@ docker-compose up -d
 
 ### Available Make Commands
 
+- `make setup` - Run setup
 - `make docker-run` - Start all containers
 - `make docker-stop` - Stop all containers
+- `make test` - Run tests
 
 ### API Endpoints
 
@@ -72,7 +86,7 @@ docker-compose up -d
 
 ```bash
 # Get bank details
-curl http://localhost:8080/v1/swift-codes/DEUTDEFFXXX | jq "."
+curl http://localhost:8080/v1/swift-codes/BKSACLRMXXX
 
 # Add a new bank
 curl -X POST http://localhost:8080/api/v1/swift-codes \
@@ -87,7 +101,7 @@ curl -X POST http://localhost:8080/api/v1/swift-codes \
   }'
 
 # Get banks by ISO2 country code
-curl http://localhost:8080/v1/swift-codes/country/CL | jq "."
+curl http://localhost:8080/v1/swift-codes/country/CL
 
 # Delete bank by SWIFT code
 curl -X DELETE http://localhost:8080/v1/swift-codes/DEUTDEFFXXX
